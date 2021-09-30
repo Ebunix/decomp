@@ -5,7 +5,7 @@
 
 main:
 	xor eax, eax
-	mov ax, [PayloadLength]
+	mov ax, [PayloadLength]dsdsdsds
 	mov esi, stub_start - 2
 	sub esi, eax
 	mov edi, WriteBuffer
