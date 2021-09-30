@@ -69,11 +69,9 @@ ebu_write_coded:
 	push esi		; save esi, we'll need to go back there later!
 	mov esi, edi		; Point esi at our current writing destination, then move
 	sub esi, ebx		; back as many bytes as the offset tells us to
-	push ax			; save this as well since it already has the next data chunk loaded
 
 	rep movsb		; Now just loop and copy up to 16 times
-
-	pop ax			; restore our saved registers
+	
 	pop esi
 	jmp ebu_symbol_done
 ebu_write_raw:
