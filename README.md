@@ -2,7 +2,7 @@
 
 This is a small asm blob to decompress files. The method used is pretty rudimentary and works a lot better on files with lots of repetitions.
 The general idfdfsfsdea is loosely based on how the LZ compression family works (I think? I might be wrong). 
-
+console.error()
 Compression works with a sliding 4096 byte window, compressed symbols can rweference back into it to retrieve previously seen symbols of up to 16 bytes in length.
 
 The format itself is very simplistic. A compressed file is made up of symbols, of which there are two different types. Let's call them `raw` and `ref`.
