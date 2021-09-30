@@ -10,57 +10,57 @@ main:
 	sub esi, eax
 	mov edi, WriteBuffer
 
-;	CL = bit position counter
-;	CH = bits to buffer
+;	DL = bit position counter
+;	DH = bits to buffer
 ;	EBX = holds clocked in data
 ;	AL = target for loading and storing
 ebu_decomp:
 	lodsb			; Buffer next byte
-	mov cl, 8		; Reset bit position counter
+	mov dl, 8		; Reset bit position counter
 
 ebu_decode_symbol:
-	dec cl			; increase bit counter
+	dec dl			; increase bit counter
 	shl al, 1		; shift out a flag bit. 
 				; 0 = 8 bits of raw data
 				; 1 = 4 bits length, 12 bits backwards offset
-	mov ch, 8		
+	mov dh, 8		
 	jnc _only_8		; Set the counter to only 8 if we need a raw byte
-	add ch, 8
+	add dh, 8
 _only_8:
 	xor ebx, ebx		; Clear ebx to clock data into
 ebu_clock_bits:
-	cmp cl, 0		; Loop header, check that we still have data
+	cmp dl, 0		; Loop header, check that we still have data
 	jne _read		
 	lodsb			; If data is empty, clock in a new byte
-	mov cl, 8		; and reset bit counter
+	mov dl, 8		; and reset bit counter
 	
 _read:
 	shl al, 1		; shift out one bit from al...
 	adc ebx, 0		; ...and add it to ebx through carry
-	dec ch			; decrease remaining bits to read
+	dec dh			; decrease remaining bits to read
 	jz _refill		; if this was the last bit, exit loop and
 				; make sure we still have data available
 
 	shl ebx, 1		; shift ebx to make room for the next bit
-	dec cl			; otherwise just rinse and repeat
+	dec dl			; otherwise just rinse and repeat
 	jmp ebu_clock_bits
 
 _refill:
-	dec cl			; reading the last bit might have left us with an
+	dec dl			; reading the last bit might have left us with an
 	jnz ebu_bits_read	; empty buffer, if so we clock in one more byte here
 	lodsb
-	mov cl, 8
+	mov dl, 8
 
 ebu_bits_read:
 
-	mov edx, ebx		; Done reading 8 or 16 bits, check if the highest nibble
-	and edx, 0xf000		; has any contents. If yes we decoded 16 bits, if no we decoded
+	mov ecx, ebx		; Done reading 8 or 16 bits, check if the highest nibble
+	and ecx, 0xf000		; has any contents. If yes we decoded 16 bits, if no we decoded
 	jz ebu_write_raw	; 8. If it's the 8 bit one we jump to the code for writing a single 
 				; 8 bit value and repeat from the top.
 
 ebu_write_coded:
-	shr edx, 12		; We read 16 bits, huh? Means we have a section to copy
-	inc edx			; Figure out the length of data to copy, shift right to align with
+	shr ecx, 12		; We read 16 bits, huh? Means we have a section to copy
+	inc ecx			; Figure out the length of data to copy, shift right to align with
 				; the register and add one
 
 	and ebx, 0xfff		; ebx still has the 16 bit value, and with 0xfff gives us just the 
@@ -70,11 +70,8 @@ ebu_write_coded:
 	mov esi, edi		; Point esi at our current writing destination, then move
 	sub esi, ebx		; back as many bytes as the offset tells us to
 	push ax			; save this as well since it already has the next data chunk loaded
-_write_coded:
-	lodsb			; Now just loop and copy up to 16 times
-	stosb
-	dec edx
-	jnz _write_coded
+
+	rep movsb		; Now just loop and copy up to 16 times
 
 	pop ax			; restore our saved registers
 	pop esi
