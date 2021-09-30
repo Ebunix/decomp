@@ -86,7 +86,7 @@ ebu_write_raw:
 	pop ax
 
 ebu_symbol_done:
-	cmp esi, stub_start - 2	; If we're not past the compressed payload yet, 
+	cmp esi, main - 2	; If we're not past the compressed payload yet, 
 	jl ebu_decode_symbol	; rinse and repeat from the top
 	
 	ret			; done, do whatever
